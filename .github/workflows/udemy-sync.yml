@@ -33,7 +33,7 @@ jobs:
         run: |
           if [ -z "$APPS_SCRIPT_URL" ]; then echo "Missing secret: APPS_SCRIPT_URL" >&2; exit 1; fi
           if [ -z "$APPS_SCRIPT_TOKEN" ]; then echo "Missing secret: APPS_SCRIPT_TOKEN" >&2; exit 1; fi
-          curl -sS -L -X POST "$APPS_SCRIPT_URL" \
+          curl -sS -L -X POST "$APPS_SCRIPT_URL?token=$APPS_SCRIPT_TOKEN" \
             -H "Authorization: Bearer $APPS_SCRIPT_TOKEN" \
             -H "Content-Type: text/plain" \
             --data-binary "@body.txt"

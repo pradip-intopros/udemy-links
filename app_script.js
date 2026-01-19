@@ -8,7 +8,7 @@ const PROP_SPREADSHEET_ID = '1flCW3bbiaWANme_1D3BbRVqrRbUM0Giap00sD6_URzM';
 
 function getSpreadsheet_() {
   const props = PropertiesService.getScriptProperties();
-  const spreadsheetId = props.getProperty(PROP_SPREADSHEET_ID);
+  const spreadsheetId = props.getProperty(PROP_SPREADSHEET_ID) || PROP_SPREADSHEET_ID;
   if (spreadsheetId) return SpreadsheetApp.openById(String(spreadsheetId));
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
