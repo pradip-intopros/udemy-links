@@ -4,7 +4,7 @@ const STATUS_DONE = 'DONE';
 
 const PROP_API_TOKEN = 'API_TOKEN';
 const PROP_NOTIFY_EMAIL = 'notifyTo';
-const PROP_SPREADSHEET_ID = '1flCW3bbiaWANme_1D3BbRVqrRbUM0Giap00sD6_URzM';
+const PROP_SPREADSHEET_ID = 'SPREADSHEET_ID';
 
 function getSpreadsheet_() {
   const props = PropertiesService.getScriptProperties();
@@ -43,7 +43,18 @@ function doPost(e) {
 
     const sheet = getSpreadsheet_().getSheetByName(SHEET_LINKS);
     const bodyText = (e && e.postData && e.postData.contents) ? String(e.postData.contents) : '';
-    const urls = extractUdemyCourseUrlsFromText_(bodyText);
+    let urls = [];
+    let jsonBody = null;
+    try {
+      jsonBody = bodyText ? JSON.parse(bodyText) : null;
+    } catch (err) {
+      jsonBody = null;
+    }
+    if (jsonBody && Array.isArray(jsonBody.urls)) {
+      urls = normalizeUdemyCourseUrlsFromArray_(jsonBody.urls);
+    } else {
+      urls = extractUdemyCourseUrlsFromText_(bodyText);
+    }
 
     const existing = readSheetMap_(sheet);
     const now = new Date();
@@ -64,7 +75,7 @@ function doPost(e) {
 
     const notifyTo =
       (e && e.parameter && e.parameter.notifyTo) ||
-      PropertiesService.getScriptProperties().getProperty(PROP_NOTIFY_EMAIL);
+      PropertiesService.getScriptProperties().getProperty(PROP_NOTIFY_EMAIL) || PROP_NOTIFY_EMAIL ;
 
     if (notifyTo) {
       const subject = `Udemy links update: +${newlyAdded.length} new, ${pending.length} unrolled`;
@@ -81,7 +92,7 @@ function doPost(e) {
 }
 
 function auth_(e) {
-  const token = PropertiesService.getScriptProperties().getProperty(PROP_API_TOKEN);
+  const token = PropertiesService.getScriptProperties().getProperty(PROP_API_TOKEN) || PROP_API_TOKEN;
   if (!token) throw new Error('API token not set (Script Properties: API_TOKEN)');
 
   const authHeader = (e && e.headers && (e.headers.Authorization || e.headers.authorization))
@@ -120,6 +131,12 @@ function extractUdemyCourseUrlsFromText_(text) {
   }
 
   return Array.from(new Set(out)).sort();
+}
+
+function normalizeUdemyCourseUrlsFromArray_(arr) {
+  if (!Array.isArray(arr) || !arr.length) return [];
+  const text = arr.map(v => String(v)).join('\n');
+  return extractUdemyCourseUrlsFromText_(text);
 }
 
 function readSheetMap_(sheet) {

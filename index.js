@@ -90,5 +90,6 @@ const { JSDOM, VirtualConsole } = require('jsdom');
 
     const uniqueUdemyEnrollUrls = [...new Set(udemyEnrollUrls)].sort();
     fs.writeFileSync('enrollLinks.udemy.json', JSON.stringify(uniqueUdemyEnrollUrls, null, 2));
+    fs.writeFileSync('body.txt', uniqueUdemyEnrollUrls.join('\n'));
     console.log(`Udemy enroll links: ${uniqueUdemyEnrollUrls.length}`);
 })()
