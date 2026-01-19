@@ -3,8 +3,11 @@ const STATUS_TODO = 'TODO';
 const STATUS_DONE = 'DONE';
 
 const PROP_API_TOKEN = 'API_TOKEN';
-const PROP_NOTIFY_EMAIL = 'notifyTo';
+const PROP_NOTIFY_EMAIL = 'NOTIFY_EMAIL';
+
+
 const PROP_SPREADSHEET_ID = 'SPREADSHEET_ID';
+
 
 function getSpreadsheet_() {
   const props = PropertiesService.getScriptProperties();
@@ -44,6 +47,7 @@ function doPost(e) {
     const sheet = getSpreadsheet_().getSheetByName(SHEET_LINKS);
     const bodyText = (e && e.postData && e.postData.contents) ? String(e.postData.contents) : '';
     let urls = [];
+    
     let jsonBody = null;
     try {
       jsonBody = bodyText ? JSON.parse(bodyText) : null;
@@ -55,6 +59,8 @@ function doPost(e) {
     } else {
       urls = extractUdemyCourseUrlsFromText_(bodyText);
     }
+
+    // return json_({ ok: true, urls, bodyText,jsonBody});
 
     const existing = readSheetMap_(sheet);
     const now = new Date();
@@ -117,17 +123,13 @@ function extractUdemyCourseUrlsFromText_(text) {
 
   for (let raw of candidates) {
     raw = raw.replace(/[)\].,;]+$/g, '');
-    let url;
-    try { url = new URL(raw); } catch { continue; }
-
-    const host = url.hostname.toLowerCase();
-    if (host !== 'udemy.com' && !host.endsWith('.udemy.com')) continue;
-
-    const segments = url.pathname.split('/').filter(Boolean);
-    if (segments[0] !== 'course' || !segments[1]) continue;
-
-    url.hash = '';
-    out.push(url.toString());
+    
+    // Use regex instead of URL class for better compatibility in GAS
+    // Host: udemy.com or *.udemy.com
+    // Path: /course/SLUG...
+    if (/^https?:\/\/([a-zA-Z0-9.-]+\.)?udemy\.com\/course\/([^\/?#]+)/i.test(raw)) {
+       out.push(raw.split('#')[0]);
+    }
   }
 
   return Array.from(new Set(out)).sort();

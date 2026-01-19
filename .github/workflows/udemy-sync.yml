@@ -24,7 +24,7 @@ jobs:
         run: node index.js
 
       - name: Build request body
-        run: node -e "const urls=require('./enrollLinks.udemy.json'); process.stdout.write(Array.isArray(urls)?urls.join('\n'):'' );" > body.txt
+        run: node -e "const urls=require('./enrollLinks.udemy.json'); console.log(JSON.stringify({urls}));" > body.json
 
       - name: Call Apps Script API
         env:
@@ -35,6 +35,6 @@ jobs:
           if [ -z "$APPS_SCRIPT_TOKEN" ]; then echo "Missing secret: APPS_SCRIPT_TOKEN" >&2; exit 1; fi
           curl -sS -L -X POST "$APPS_SCRIPT_URL?token=$APPS_SCRIPT_TOKEN" \
             -H "Authorization: Bearer $APPS_SCRIPT_TOKEN" \
-            -H "Content-Type: text/plain" \
-            --data-binary "@body.txt"
+            -H "Content-Type: application/json" \
+            --data-binary "@body.json"
 
